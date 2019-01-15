@@ -67,14 +67,14 @@ instance Applicative List where
     a
     -> List a
   pure a = a :. Nil
-  
+
   (<*>) ::
     List (a -> b)
     -> List a
     -> List b
   (<*>) lf l =
     flatten $ (<$>) (\f -> (\el ->  f el) <$> l ) lf
-    
+
 
 -- | Insert into an Optional.
 --
@@ -123,15 +123,13 @@ instance Applicative ((->) t) where
     -> ((->) t a)
   pure a =
     \_ -> a
- 
+
   (<*>) ::
     ((->) t (a -> b))
     -> ((->) t a)
     -> ((->) t b)
   (<*>) ff  f =
     \t -> ff t (f t)
-          
-    
 
 
 -- | Apply a binary function in the environment.
@@ -161,7 +159,7 @@ lift2 ::
   -> f c
 lift2 binaryF fa fb =
   binaryF <$> fa  <*> fb
-  
+
 
 -- | Apply a ternary function in the environment.
 -- /can be written using `lift2` and `(<*>)`./
@@ -254,7 +252,6 @@ lift1 ::
   -> f a
   -> f b
 lift1 = (<$>)
-  
 
 -- | Apply, discarding the value of the first argument.
 -- Pronounced, right apply.
@@ -345,7 +342,7 @@ sequence = foldRight(lift2 (:.)) (pure Nil)
 -- >>> replicateA 4 (*2) 5
 -- [10,10,10,10]
 --
--- >>> replicateA 3 ('a' :. 'b' :. 'c' :. Nil)  
+-- >>> replicateA 3 ('a' :. 'b' :. 'c' :. Nil)
 -- ["aaa","aab","aac","aba","abb","abc","aca","acb","acc","baa","bab","bac","bba","bbb","bbc","bca","bcb","bcc","caa","cab","cac","cba","cbb","cbc","cca","ccb","ccc"]
 replicateA ::
   Applicative f =>
@@ -381,10 +378,9 @@ filtering ::
   -> List a
   -> f (List a)
 filtering predF=
-  foldRight (\el fAcc ->  
-    lift2 (\b acc -> if b then el :. acc else acc) (predF el) fAcc 
+  foldRight (\el fAcc ->
+    lift2 (\b acc -> if b then el :. acc else acc) (predF el) fAcc
     ) (pure Nil)
-  
 
 -----------------------
 -- SUPPORT LIBRARIES --
