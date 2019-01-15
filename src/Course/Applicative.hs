@@ -118,18 +118,14 @@ instance Applicative Optional where
 --
 -- prop> \x y -> pure x y == x
 instance Applicative ((->) t) where
-  pure ::
-    a
-    -> ((->) t a)
-  pure a =
-    \_ -> a
+  pure :: a -> ((->) t a)
+  pure = const
 
   (<*>) ::
     ((->) t (a -> b))
     -> ((->) t a)
     -> ((->) t b)
-  (<*>) ff  f =
-    \t -> ff t (f t)
+  (<*>) ff  f t = ff t (f t)
 
 
 -- | Apply a binary function in the environment.
@@ -385,6 +381,7 @@ filtering predF=
 -----------------------
 -- SUPPORT LIBRARIES --
 -----------------------
+
 
 instance Applicative IO where
   pure =
