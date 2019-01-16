@@ -31,9 +31,7 @@ import qualified Numeric as N
 -- BEGIN Helper functions and data types
 
 -- The custom list type
-data List t =
-  Nil
-  | t :. List t
+data List t = Nil | t :. List t
   deriving (Eq, Ord)
 
 -- Right-associative
@@ -117,7 +115,7 @@ length ::
   List a
   -> Int
 length =
-  foldLeft (\l _ -> l + 1 ) 0 
+  foldLeft (\l _ -> l + 1 ) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -131,8 +129,8 @@ map ::
   (a -> b)
   -> List a
   -> List b
-map f = foldRight (\el list -> f(el) :. list) Nil 
-  
+map f = foldRight (\el list -> f el :. list) Nil
+
 -- | Return elements satisfying the given predicate.
 --
 -- >>> filter even (1 :. 2 :. 3 :. 4 :. 5 :. Nil)
@@ -147,7 +145,7 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter predicate = 
+filter predicate =
   foldRight (\el list -> if predicate el then el :. list else list) Nil
 
 -- | Append two lists to a new list.
@@ -167,7 +165,7 @@ filter predicate =
   -> List a
   -> List a
 (++) firstList secondList =
-  foldRight (\el list -> el :. list ) secondList firstList
+  foldRight (:.) secondList firstList
 
 infixr 5 ++
 
@@ -185,7 +183,7 @@ flatten ::
   List (List a)
   -> List a
 flatten =
-  foldRight (\el list -> el ++ list ) Nil
+  foldRight (++) Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -201,7 +199,7 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap f = foldRight (\el list -> (f el ) ++ list) Nil
+flatMap f = foldRight (\el list -> f el  ++ list) Nil
 
 -- | Flatten a list of lists to a list (again).
 -- HOWEVER, this time use the /flatMap/ function that you just wrote.
@@ -211,7 +209,7 @@ flattenAgain ::
   List (List a)
   -> List a
 flattenAgain =
-  flatMap id 
+  flatMap id
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -264,8 +262,7 @@ find ::
   -> List a
   -> Optional a
 find _ Nil = Empty
-find predicate (h :. t) = if predicate h then (Full h) else find predicate t
-  
+find predicate (h :. t) = if predicate h then Full h else find predicate t
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -285,7 +282,6 @@ lengthGT4 ::
   -> Bool
 lengthGT4 (_ :. _ :. _ :. _ :. _ :. _) = True
 lengthGT4 _ = False
-  
 
 -- | Reverse a list.
 --
@@ -302,7 +298,7 @@ reverse ::
   List a
   -> List a
 reverse =
-  foldLeft (\l el -> el:. l) Nil
+  foldLeft ( flip (:.) ) Nil
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements

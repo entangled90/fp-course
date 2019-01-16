@@ -175,11 +175,20 @@ firstRepeat l =
 -- prop> \xs -> firstRepeat (distinct xs) == Empty
 --
 -- prop> \xs -> distinct xs == distinct (flatMap (\x -> x :. x :. Nil) xs)
+
+type SetState a b = State (S.Set a)  b
+
 distinct ::
   Ord a =>
   List a
   -> List a
-distinct l =
+distinct = error "undefined"
+
+distinctRec ::
+  Ord a =>
+  List a
+  -> List a
+distinctRec l =
   let distinctAcc Nil acc _ = acc
       distinctAcc (h :. t) acc set = if S.member h set then distinctAcc t acc set else distinctAcc t  (h :. acc) (S.insert h set)
   in reverse $ distinctAcc l Nil S.empty

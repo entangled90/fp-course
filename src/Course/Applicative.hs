@@ -47,8 +47,7 @@ instance Applicative ExactlyOne where
   pure ::
     a
     -> ExactlyOne a
-  pure a =
-    ExactlyOne a
+  pure = ExactlyOne
   (<*>) ::
     ExactlyOne (a -> b)
     -> ExactlyOne a
