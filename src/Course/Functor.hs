@@ -42,7 +42,6 @@ instance Functor ExactlyOne where
     -> ExactlyOne a
     -> ExactlyOne b
   (<$>) f (ExactlyOne a) = ExactlyOne (f a)
-    
 
 -- | Maps a function on the List functor.
 --
@@ -57,7 +56,6 @@ instance Functor List where
     -> List a
     -> List b
   (<$>) = Course.List.map
-    
 
 -- | Maps a function on the Optional functor.
 --
@@ -71,9 +69,8 @@ instance Functor Optional where
     (a -> b)
     -> Optional a
     -> Optional b
-  (<$>) _ Empty = Empty 
+  (<$>) _ Empty = Empty
   (<$>) f (Full a) = Full( f a)
-  
 
 -- | Maps a function on the reader ((->) t) functor.
 --
