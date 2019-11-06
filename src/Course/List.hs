@@ -704,3 +704,7 @@ instance P.Monad List where
 headOption :: List t -> Optional t
 headOption Nil = Empty
 headOption (h :. _) = Full h
+
+
+nonEmpty:: List t -> Bool
+nonEmpty = not . isEmpty
