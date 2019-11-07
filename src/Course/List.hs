@@ -20,7 +20,8 @@ import Course.Optional
 import qualified System.Environment as E
 import qualified Prelude as P
 import qualified Numeric as N
-
+import Data.Monoid
+import Data.Semigroup
 
 -- $setup
 -- >>> import Test.QuickCheck
@@ -708,3 +709,12 @@ headOption (h :. _) = Full h
 
 nonEmpty:: List t -> Bool
 nonEmpty = not . isEmpty
+
+singleton:: a -> List a
+singleton a = a :. Nil
+
+
+instance Semigroup (List a) where
+  (<>) = (++)
+instance Monoid (List a) where
+  mempty = Nil
