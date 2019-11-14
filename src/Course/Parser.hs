@@ -103,6 +103,9 @@ unexpectedCharParser ::
 unexpectedCharParser c =
   P (\_ -> UnexpectedChar c)
 
+unexpectedStringParser :: Chars -> Parser a
+unexpectedStringParser chars = P (\_ -> UnexpectedString chars)
+
 --- | Return a parser that always returns the given parse result.
 ---
 --- >>> isErrorResult (parse (constantParser UnexpectedEof) "abc")
@@ -249,6 +252,11 @@ satisfy p = (\c -> if (p c) then pure c else unexpectedCharParser c) =<< charact
 is ::
   Char -> Parser Char
 is c = satisfy $ (==) c
+
+
+isNot :: Char -> Parser Char
+isNot c = satisfy $ (not . (==) c)
+
 
 -- | Return a parser that produces a character between '0' and '9' but fails if
 --
@@ -565,7 +573,7 @@ personParser = Person <$> ageParser <*>~  firstNameParser <*>~ surnameParser <*>
 ----
 
 instance Semigroup a => Semigroup (Parser a) where
-  p1 <> p2 = (<>) <$> p1 <*> p2
+  (<>) = lift2 (<>)
 
 instance Monoid a => Monoid (Parser a) where
   mempty = valueParser mempty
