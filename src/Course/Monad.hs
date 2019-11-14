@@ -5,25 +5,26 @@
 
 module Course.Monad where
 
-import Course.Applicative
-import Course.Core
-import Course.ExactlyOne
-import Course.Functor
-import Course.List
-import Course.Optional
-import qualified Prelude as P((=<<))
+import           Course.Applicative
+import           Course.Core
+import           Course.ExactlyOne
+import           Course.Functor
+import           Course.List
+import           Course.Optional
+import qualified Prelude                       as P
+                                                ( (=<<) )
 
 -- | All instances of the `Monad` type-class must satisfy one law. This law
 -- is not checked by the compiler. This law is given as:
 --
 -- * The law of associativity
 --   `∀f g x. g =<< (f =<< x) ≅ ((g =<<) . f) =<< x`
-class Applicative f => Monad f where
+class Applicative k => Monad k where
   -- Pronounced, bind.
   (=<<) ::
-    (a -> f b)
-    -> f a
-    -> f b
+    (a -> k b)
+    -> k a
+    -> k b
 
 infixr 1 =<<
 
@@ -32,10 +33,7 @@ infixr 1 =<<
 -- >>> (\x -> ExactlyOne(x+1)) =<< ExactlyOne 2
 -- ExactlyOne 3
 instance Monad ExactlyOne where
-  (=<<) ::
-    (a -> ExactlyOne b)
-    -> ExactlyOne a
-    -> ExactlyOne b
+  (=<<) :: (a -> ExactlyOne b) -> ExactlyOne a -> ExactlyOne b
   (=<<) f (ExactlyOne a) = f a
 
 -- | Binds a function on a List.
@@ -43,10 +41,7 @@ instance Monad ExactlyOne where
 -- >>> (\n -> n :. n :. Nil) =<< (1 :. 2 :. 3 :. Nil)
 -- [1,1,2,2,3,3]
 instance Monad List where
-  (=<<) ::
-    (a -> List b)
-    -> List a
-    -> List b
+  (=<<) :: (a -> List b) -> List a -> List b
   (=<<) = Course.List.flatMap
 
 -- | Binds a function on an Optional.
@@ -54,26 +49,20 @@ instance Monad List where
 -- >>> (\n -> Full (n + n)) =<< Full 7
 -- Full 14
 instance Monad Optional where
-  (=<<) ::
-    (a -> Optional b)
-    -> Optional a
-    -> Optional b
+  (=<<) :: (a -> Optional b) -> Optional a -> Optional b
   (=<<) f (Full a) = f a
-  (=<<) _ _ =  Empty
+  (=<<) _ _        = Empty
 
 -- | Binds a function on the reader ((->) t).
 --
 -- >>> ((*) =<< (+10)) 7
 -- 119
 instance Monad ((->) t) where
-  (=<<) ::
-    (a -> ((->) t b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (=<<) atb ta =
-    \t -> let a = (ta t)
-              tb = atb a
-          in tb t
+  (=<<) :: (a -> ((->) t b)) -> ((->) t a) -> ((->) t b)
+  (=<<) atb ta = \t ->
+    let a  = (ta t)
+        tb = atb a
+    in  tb t
 
 -- | Witness that all things with (=<<) and (<$>) also have (<*>).
 --
@@ -106,11 +95,7 @@ instance Monad ((->) t) where
 --
 -- >>> ((*) <**> (+2)) 3
 -- 15
-(<**>) ::
-  Monad f =>
-  f (a -> b)
-  -> f a
-  -> f b
+(<**>) :: Monad f => f (a -> b) -> f a -> f b
 (<**>) = (<*>)
 
 infixl 4 <**>
@@ -128,10 +113,7 @@ infixl 4 <**>
 --
 -- >>> join (+) 7
 -- 14
-join ::
-  Monad f =>
-  f (f a)
-  -> f a
+join :: Monad f => f (f a) -> f a
 join = (=<<) id
 
 -- | Implement a flipped version of @(=<<)@, however, use only
@@ -140,28 +122,18 @@ join = (=<<) id
 --
 -- >>> ((+10) >>= (*)) 7
 -- 119
-(>>=) ::
-  Monad f =>
-  f a
-  -> (a -> f b)
-  -> f b
+(>>=) :: Monad f => f a -> (a -> f b) -> f b
 (>>=) fa f = f =<< fa
 
 infixl 1 >>=
 
 -- | Implement composition within the @Monad@ environment.
--- Pronounced, kleisli composition.
+-- Pronounced, Kleisli composition.
 --
 -- >>> ((\n -> n :. n :. Nil) <=< (\n -> n+1 :. n+2 :. Nil)) 1
 -- [2,2,3,3]
-(<=<) ::
-  Monad f =>
-  (b -> f c)
-  -> (a -> f b)
-  -> a
-  -> f c
-(<=<) bfc afb a =
-  bfc =<< (afb a)
+(<=<) :: Monad k => (b -> k c) -> (a -> k b) -> a -> k c
+(<=<) bfc afb a = bfc =<< (afb a)
 
 infixr 1 <=<
 
@@ -170,5 +142,4 @@ infixr 1 <=<
 -----------------------
 
 instance Monad IO where
-  (=<<) =
-    (P.=<<)
+  (=<<) = (P.=<<)

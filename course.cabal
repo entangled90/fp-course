@@ -20,7 +20,7 @@ homepage:             https://github.com/data61/fp-course
 bug-reports:          https://github.com/data61/fp-course/issues
 cabal-version:        >= 1.10
 build-type:           Simple
-tested-with:          GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.2
+tested-with:          GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.4
 extra-source-files:   etc/CONTRIBUTORS,
                       changelog
 
@@ -50,11 +50,13 @@ library
   hs-source-dirs:     src
 
   exposed-modules:    Course
+                      Course.Alternative
                       Course.Anagrams
                       Course.Applicative
                       Course.Cheque
                       Course.Comonad
                       Course.Compose
+                      Course.Contravariant
                       Course.Core
                       Course.ExactlyOne
                       Course.Extend
@@ -67,7 +69,6 @@ library
                       Course.List
                       Course.ListZipper
                       Course.Monad
-                      Course.MonadTutorial
                       Course.MoreParser
                       Course.Optional
                       Course.Parser
@@ -95,11 +96,17 @@ test-suite            tasty
                       Course.ListTest
                       Course.ListZipperTest
                       Course.MonadTest
+                      Course.MoreParserTest
                       Course.OptionalTest
+                      Course.ParserTest
                       Course.StateTest
                       Course.StateTTest
                       Course.TraversableTest
                       Course.ValidationTest
+                      TestLoader
+                      Test.Course.Mini
+                      Test.Mini
+                      Test.Tasty.Mini
 
   default-language:
                       Haskell2010

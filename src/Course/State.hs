@@ -91,8 +91,7 @@ instance Functor (State s) where
 -- >>> runState (pure (+1) <*> pure 0) 0
 -- (1,0)
 --
--- >>> import qualified Prelude as P
--- >>> runState (State (\s -> ((+3), s P.++ ["apple"])) <*> State (\s -> (7, s P.++ ["banana"]))) []
+-- >>> runState (State (\s -> ((+3), s ++ ("apple":.Nil))) <*> State (\s -> (7, s ++ ("banana":.Nil)))) Nil
 -- (10,["apple","banana"])
 instance Applicative (State s) where
   pure ::
@@ -110,13 +109,16 @@ instance Applicative (State s) where
       in (ab a, s2)
       )
 
--- | Implement the `Bind` instance for `State s`.
+-- | Implement the `Monad` instance for `State s`.
 --
 -- >>> runState ((const $ put 2) =<< put 1) 0
 -- ((),2)
 --
 -- >>> let modify f = State (\s -> ((), f s)) in runState (modify (+1) >>= \() -> modify (*2)) 7
 -- ((),16)
+--
+-- >>> runState ((\a -> State (\s -> (a + s, 10 + s))) =<< State (\s -> (s * 2, 4 + s))) 2
+-- (10,16)
 instance Monad (State s) where
   (=<<) ::
     (a -> State s b)

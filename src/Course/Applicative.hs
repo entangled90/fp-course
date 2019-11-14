@@ -5,27 +5,31 @@
 
 module Course.Applicative where
 
-import Course.Core
-import Course.ExactlyOne
-import Course.Functor
-import Course.List
-import Course.Optional
-import qualified Prelude as P(fmap, return, (>>=))
+import           Course.Core
+import           Course.ExactlyOne
+import           Course.Functor
+import           Course.List
+import           Course.Optional
+import qualified Prelude                       as P
+                                                ( fmap
+                                                , return
+                                                , (>>=)
+                                                )
 
--- | All instances of the `Applicative` type-class must satisfy three laws.
+-- | All instances of the `Applicative` type-class must satisfy four laws.
 -- These laws are not checked by the compiler. These laws are given as:
 --
--- * The law of associative composition
---   `∀a b c. ((.) <$> a <*> b <*> c) ≅ (a <*> (b <*> c))`
---
 -- * The law of identity
---   `∀x. pure id <*> x ≅ x`
---
--- * The law of homomorphism
---   `∀f x. pure f <*> pure x ≅ pure (f x)`
+--   `∀x. pure id <*> x = x`
 --
 -- * The law of composition
---   `∀u v w. pure (.) <*> u <*> v <*> w ≅ u <*> (v <*> w)`
+--   `∀u v w. pure (.) <*> u <*> v <*> w = u <*> (v <*> w)`
+--
+-- * The law of homomorphism
+--   `∀f x. pure f <*> pure x = pure (f x)`
+--
+-- * The law of interchange
+--   `∀u y. u <*> pure y = pure ($ y) <*> u`
 
 class Functor f => Applicative f where
   pure ::
@@ -44,15 +48,10 @@ infixl 4 <*>
 -- >>> ExactlyOne (+10) <*> ExactlyOne 8
 -- ExactlyOne 18
 instance Applicative ExactlyOne where
-  pure ::
-    a
-    -> ExactlyOne a
+  pure :: a -> ExactlyOne a
   pure = ExactlyOne
-  (<*>) ::
-    ExactlyOne (a -> b)
-    -> ExactlyOne a
-    -> ExactlyOne b
-  (<*>) (ExactlyOne f) (ExactlyOne b)= ExactlyOne (f b)
+  (<*>) :: ExactlyOne (a -> b) -> ExactlyOne a -> ExactlyOne b
+  (<*>) (ExactlyOne f) (ExactlyOne b) = ExactlyOne (f b)
 
 
 -- | Insert into a List.
@@ -62,17 +61,11 @@ instance Applicative ExactlyOne where
 -- >>> (+1) :. (*2) :. Nil <*> 1 :. 2 :. 3 :. Nil
 -- [2,3,4,2,4,6]
 instance Applicative List where
-  pure ::
-    a
-    -> List a
+  pure :: a -> List a
   pure a = a :. Nil
 
-  (<*>) ::
-    List (a -> b)
-    -> List a
-    -> List b
-  (<*>) lf l =
-    flatten $ (<$>) (\f -> (\el ->  f el) <$> l ) lf
+  (<*>) :: List (a -> b) -> List a -> List b
+  (<*>) lf l = flatten $ (<$>) (\f -> (\el -> f el) <$> l) lf
 
 
 -- | Insert into an Optional.
@@ -88,16 +81,11 @@ instance Applicative List where
 -- >>> Full (+8) <*> Empty
 -- Empty
 instance Applicative Optional where
-  pure ::
-    a
-    -> Optional a
+  pure :: a -> Optional a
   pure = Full
-  (<*>) ::
-    Optional (a -> b)
-    -> Optional a
-    -> Optional b
-  (<*>) (Full f) optA= f <$> optA
-  (<*>) Empty _ = Empty
+  (<*>) :: Optional (a -> b) -> Optional a -> Optional b
+  (<*>) (Full f) optA = f <$> optA
+  (<*>) Empty    _    = Empty
 -- | Insert into a constant function.
 --
 -- >>> ((+) <*> (+10)) 3
@@ -120,11 +108,8 @@ instance Applicative ((->) t) where
   pure :: a -> ((->) t a)
   pure = const
 
-  (<*>) ::
-    ((->) t (a -> b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (<*>) ff  f t = ff t (f t)
+  (<*>) :: ((->) t (a -> b)) -> ((->) t a) -> ((->) t b)
+  (<*>) ff f t = ff t (f t)
 
 
 -- | Apply a binary function in the environment.
@@ -146,14 +131,8 @@ instance Applicative ((->) t) where
 --
 -- >>> lift2 (+) length sum (listh [4,5,6])
 -- 18
-lift2 ::
-  Applicative f =>
-  (a -> b -> c)
-  -> f a
-  -> f b
-  -> f c
-lift2 binaryF fa fb =
-  binaryF <$> fa  <*> fb
+lift2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
+lift2 binaryF fa fb = binaryF <$> fa <*> fb
 
 
 -- | Apply a ternary function in the environment.
@@ -179,15 +158,8 @@ lift2 binaryF fa fb =
 --
 -- >>> lift3 (\a b c -> a + b + c) length sum product (listh [4,5,6])
 -- 138
-lift3 ::
-  Applicative f =>
-  (a -> b -> c -> d)
-  -> f a
-  -> f b
-  -> f c
-  -> f d
-lift3 triF fa fb fc=
-  lift2 triF fa fb <*> fc
+lift3 :: Applicative f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+lift3 triF fa fb fc = lift2 triF fa fb <*> fc
 
 -- | Apply a quaternary function in the environment.
 -- /can be written using `lift3` and `(<*>)`./
@@ -212,22 +184,12 @@ lift3 triF fa fb fc=
 --
 -- >>> lift4 (\a b c d -> a + b + c + d) length sum product (sum . filter even) (listh [4,5,6])
 -- 148
-lift4 ::
-  Applicative f =>
-  (a -> b -> c -> d -> e)
-  -> f a
-  -> f b
-  -> f c
-  -> f d
-  -> f e
-lift4 quadriF fa fb fc fd=
-  lift3 quadriF fa fb fc <*> fd
+lift4
+  :: Applicative f => (a -> b -> c -> d -> e) -> f a -> f b -> f c -> f d -> f e
+lift4 quadriF fa fb fc fd = lift3 quadriF fa fb fc <*> fd
 
 -- | Apply a nullary function in the environment.
-lift0 ::
-  Applicative f =>
-  a
-  -> f a
+lift0 :: Applicative f => a -> f a
 lift0 = pure
 
 -- | Apply a unary function in the environment.
@@ -241,11 +203,7 @@ lift0 = pure
 --
 -- >>> lift1 (+1) (1 :. 2 :. 3 :. Nil)
 -- [2,3,4]
-lift1 ::
-  Applicative f =>
-  (a -> b)
-  -> f a
-  -> f b
+lift1 :: Applicative f => (a -> b) -> f a -> f b
 lift1 = (<$>)
 
 -- | Apply, discarding the value of the first argument.
@@ -266,11 +224,7 @@ lift1 = (<$>)
 -- prop> \a b c x y z -> (a :. b :. c :. Nil) *> (x :. y :. z :. Nil) == (x :. y :. z :. x :. y :. z :. x :. y :. z :. Nil)
 --
 -- prop> \x y -> Full x *> Full y == Full y
-(*>) ::
-  Applicative f =>
-  f a
-  -> f b
-  -> f b
+(*>) :: Applicative f => f a -> f b -> f b
 (*>) = lift2 (const id)
 
 -- | Apply, discarding the value of the second argument.
@@ -291,13 +245,8 @@ lift1 = (<$>)
 -- prop> \x y z a b c -> (x :. y :. z :. Nil) <* (a :. b :. c :. Nil) == (x :. x :. x :. y :. y :. y :. z :. z :. z :. Nil)
 --
 -- prop> \x y -> Full x <* Full y == Full x
-(<*) ::
-  Applicative f =>
-  f b
-  -> f a
-  -> f b
-(<*) =
-  lift2 const
+(<*) :: Applicative f => f b -> f a -> f b
+(<*) = lift2 const
 
 -- | Sequences a list of structures to a structure of list.
 --
@@ -315,11 +264,8 @@ lift1 = (<$>)
 --
 -- >>> sequence ((*10) :. (+2) :. Nil) 6
 -- [60,8]
-sequence ::
-  Applicative f =>
-  List (f a)
-  -> f (List a)
-sequence = foldRight(lift2 (:.)) (pure Nil)
+sequence :: Applicative f => List (f a) -> f (List a)
+sequence = foldRight (lift2 (:.)) (pure Nil)
 
 -- | Replicate an effect a given number of times.
 --
@@ -339,13 +285,8 @@ sequence = foldRight(lift2 (:.)) (pure Nil)
 --
 -- >>> replicateA 3 ('a' :. 'b' :. 'c' :. Nil)
 -- ["aaa","aab","aac","aba","abb","abc","aca","acb","acc","baa","bab","bac","bba","bbb","bbc","bca","bcb","bcc","caa","cab","cac","cba","cbb","cbc","cca","ccb","ccc"]
-replicateA ::
-  Applicative f =>
-  Int
-  -> f a
-  -> f (List a)
-replicateA n =
-  sequence . replicate n
+replicateA :: Applicative f => Int -> f a -> f (List a)
+replicateA n = sequence . replicate n
 
 -- | Filter a list with a predicate that produces an effect.
 --
@@ -367,15 +308,10 @@ replicateA n =
 -- >>> filtering (const $ True :. True :.  Nil) (1 :. 2 :. 3 :. Nil)
 -- [[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3]]
 --
-filtering ::
-  Applicative f =>
-  (a -> f Bool)
-  -> List a
-  -> f (List a)
-filtering predF=
-  foldRight (\el fAcc ->
-    lift2 (\b acc -> if b then el :. acc else acc) (predF el) fAcc
-    ) (pure Nil)
+filtering :: Applicative f => (a -> f Bool) -> List a -> f (List a)
+filtering predF = foldRight
+  (\el fAcc -> lift2 (\b acc -> if b then el :. acc else acc) (predF el) fAcc)
+  (pure Nil)
 
 -----------------------
 -- SUPPORT LIBRARIES --
@@ -383,29 +319,14 @@ filtering predF=
 
 
 instance Applicative IO where
-  pure =
-    P.return
-  f <*> a =
-    f P.>>= \f' -> P.fmap f' a
+  pure = P.return
+  f <*> a = f P.>>= \f' -> P.fmap f' a
 
-return ::
-  Applicative f =>
-  a
-  -> f a
-return =
-  pure
+return :: Applicative f => a -> f a
+return = pure
 
-fail ::
-  Applicative f =>
-  Chars
-  -> f a
-fail =
-  error . hlist
+fail :: Applicative f => Chars -> f a
+fail = error . hlist
 
-(>>) ::
-  Applicative f =>
-  f a
-  -> f b
-  -> f b
-(>>) =
-  (*>)
+(>>) :: Applicative f => f a -> f b -> f b
+(>>) = (*>)

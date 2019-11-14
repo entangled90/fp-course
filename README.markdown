@@ -69,7 +69,7 @@ however, your first post might be moderated. This is simply to prevent spam.
 instead. [Instructions](ops/README.md) for automatically building a virtual machine are
 available in this repository for your convenience.
 
-1. Install the Glasgow Haskell Compiler (GHC) version 7.10 or higher.
+1. Install the Glasgow Haskell Compiler (GHC) version 8.0 or higher.
 
 2. Change to the directory containing this document.
 
@@ -152,8 +152,9 @@ available in this repository for your convenience.
    on following the types, you will develop more trust in the potential paths
    that they can take you, including identification of false paths.
 
-   Your instructor must guide you where types fall short, but you should also
-   take the first step. Do it.
+   Where types fall short, use the tests written in comments above each exercise.
+   They can be copied and pasted into GHCi. You should also take the first step
+   of following the types. Do it.
 
 5. Do not use tab characters
 
@@ -165,16 +166,32 @@ available in this repository for your convenience.
 
 ### Running the tests
 
-Tests are available as a [tasty](https://hackage.haskell.org/package/tasty)
-test suite.
+Tests are stored under the `test/` directory. Each module from the course that
+has tests has a corresponding `<MODULE>Test.hs` file. Within each test module,
+tests for each function are grouped using the `testGroup` function. Within each
+test group there are test cases (`testCase` function), and properties
+(`testProperty` function).
+
+Tests are able to be run using either a built-in test runner that has no
+requirement beyond those of the course (a supported version of GHCi), or
+[tasty](https://hackage.haskell.org/package/tasty).
+
+**NOTE**: If running tests using the embedded runner, no property tests will be
+run.
+
+#### Built-in runner
+
+Each test module exports a function called `courseTest` that may be used to run tests. To run
+tests, load the relevant module, and then run `courseTest <tests>`. For example, in `GHCi`:
+
+    λ> :l test/Course/ListTest.hs
+    λ> courseTest test_List
+    λ> courseTest productTest
+
+Alternatively, the full test suite may be run by loading `test/TestLoader.hs` and running
+`courseTest tests`.
 
 #### tasty
-
-Tasty tests are stored under the `test/` directory. Each module from the course
-that has tests has a corresponding `<MODULE>Test.hs` file. Within each test
-module, tests for each function are grouped using the `testGroup` function.
-Within each test group there are test cases (`testCase` function), and
-properties (`testProperty` function).
 
 Before running the tests, ensure that you have an up-to-date installation
 of GHC and cabal-install from your system package manager or use the minimal
@@ -199,23 +216,26 @@ Likewise, to run only the tests for the `headOr` function in the `List` module, 
 
     > cabal test tasty --show-detail=direct --test-option=--pattern="List.headOr"
 
-In addition, GHCi may be used to run tasty tests. Assuming you have run `ghci`
+In addition, GHCi may be used to run tests using tasty. Assuming you have run `ghci`
 from the root of the project, you may do the following. Remember that GHCi has
 tab completion, so you can save yourself some typing.
 
-    > -- import the defaultMain function from Tasty - runs something of type TestTree
-    > import Test.Tasty (defaultMain)
-    >
-    > -- Load the test module you'd like to run tests for
-    > :l test/Course/ListTest.hs
-    >
-    > -- Browse the contents of the loaded module - anything of type TestTree
-    > -- may be run
-    > :browse Course.ListTest
-    >
-    > -- Run test for a particular function
-    > defaultMain headOrTest
+    λ> -- Load the tasty test runner and tests
+    λ> :l test/TastyLoader.hs
+    λ>
+    λ> -- Tests may be referenced by module
+    λ> tastyTest ListTest.headOrTest
+    λ> tastyTest OptionalTest.valueOrTest
+    λ> tastyTest tests
 
+#### `:reload` and run tests
+
+In addition there are custom `:courseTest` and `:tastyTest` commands defined
+in `.ghci` that will invoke `:reload` and then `courseTest` or `tastyTest`.
+
+For example:
+
+    λ> :tastyTest List.test_List
 
 #### doctest
 
@@ -246,6 +266,7 @@ After this, the following progression of modules is recommended:
 * `Course.StateT`
 * `Course.Extend`
 * `Course.Comonad`
+* `Course.Contravariant`
 * `Course.Compose`
 * `Course.Traversable`
 * `Course.ListZipper`
@@ -277,8 +298,8 @@ If you choose to use the [Leksah IDE for Haskell](http://leksah.org/), the
 following tips are recommended:
 
 * [Install Leksah from github](https://github.com/leksah/leksah#getting-leksah).
-  If you are using Nix to install Leksah launch it with `./leksah-nix.sh ghc822`
-  as the Nix files for this course use GHC 8.2.2.
+  If you are using Nix to install Leksah launch it with `./leksah-nix.sh ghc864`
+  as the Nix files for this course use GHC 8.6.4.
 * Clone this fp-course git repo use File -> Open Project to open the cabal.project file.
 * Mouse over the toolbar items near the middle of toolbar to see the names of them.
   Set the following items on/off:
@@ -320,7 +341,7 @@ these points should be covered before attempting the exercises.
   * The `->` in a type signature is *right-associative*
 * functions are values
 * functions take arguments
-  * functions take *only one argument* but we approximate without spoken
+  * functions take *only one argument* but we approximate with spoken
     language
   * functions can be declared inline using *lambda expressions*
   * the `\` symbol in a lambda expression denotes a Greek lambda
@@ -442,13 +463,13 @@ What about these two programs?
 
     def writeFile(filename, contents):
         with open(filename, "w") as f:
-        f.write(contents)
+            f.write(contents)
 
     def readFile(filename):
         contents = ""
         with open(filename, "r") as f:
-        contents = f.read()
-        return contents
+            contents = f.read()
+            return contents
 
     def p1():
         file = "/tmp/file"

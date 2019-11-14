@@ -25,10 +25,10 @@ import           Course.Compose
 --   `∀f g. traverse ((g <$>) . f) ≅ (traverse g <$>) . traverse f`
 class Functor t => Traversable t where
   traverse ::
-    Applicative f =>
-    (a -> f b)
+    Applicative k =>
+    (a -> k b)
     -> t a
-    -> f (t b)
+    -> k (t b)
 
 instance Traversable List where
   traverse :: Applicative f => (a -> f b) -> List a -> f (List b)
@@ -41,8 +41,8 @@ instance Traversable ExactlyOne where
 
 instance Traversable Optional where
   traverse :: Applicative f => (a -> f b) -> Optional a -> f (Optional b)
-  traverse f (Full a) =   Full <$> f a
-  traverse _ _ = pure Empty
+  traverse f (Full a) = Full <$> f a
+  traverse _ _        = pure Empty
 
 -- | Sequences a traversable value of structures to a structure of a traversable value.
 --
@@ -62,12 +62,9 @@ sequenceA = traverse id
 instance (Traversable f, Traversable g) =>
   Traversable (Compose f g) where
 -- Implement the traverse function for a Traversable instance for Compose
-  traverse ::
-    Applicative f1 =>
-    (a -> f1 b)
-    -> (Compose f g a)
-    -> f1 (Compose f g b)
-  traverse f (Compose fga)  = Compose <$> (traverse (traverse f) fga)
+  traverse
+    :: Applicative f1 => (a -> f1 b) -> (Compose f g a) -> f1 (Compose f g b)
+  traverse f (Compose fga) = Compose <$> (traverse (traverse f) fga)
 
 
 -- | The `Product` data type contains one value from each of the two type constructors.
@@ -77,20 +74,17 @@ data Product f g a =
 instance (Functor f, Functor g) =>
   Functor (Product f g) where
 -- Implement the (<$>) function for a Functor instance for Product
-  (<$>) f (Product fa ga)= Product (f <$> fa) (f <$> ga)
+  (<$>) f (Product fa ga) = Product (f <$> fa) (f <$> ga)
 
 instance (Traversable f, Traversable g) =>
   Traversable (Product f g) where
 -- Implement the traverse function for a Traversable instance for Product
-  traverse :: 
-    Applicative f1 =>
-    (a -> f1 b) 
-    -> Product f g a
-    -> f1 (Product f g b)
+  traverse
+    :: Applicative f1 => (a -> f1 b) -> Product f g a -> f1 (Product f g b)
   traverse f (Product fa ga) =
     let fb = traverse f fa
         gb = traverse f ga
-    in Product <$> fb <*> gb
+    in  Product <$> fb <*> gb
 
 -- | The `Coproduct` data type contains one value from either of the two type constructors.
 data Coproduct f g a =
@@ -100,12 +94,12 @@ data Coproduct f g a =
 instance (Functor f, Functor g) =>
   Functor (Coproduct f g) where
 -- Implement the (<$>) function for a Functor instance for Coproduct
-  (<$>) f (InL fa)= InL $ f <$> fa
-  (<$>) f (InR fa)= InR $ f <$> fa
+  (<$>) f (InL fa) = InL $ f <$> fa
+  (<$>) f (InR fa) = InR $ f <$> fa
 
 instance (Traversable f, Traversable g) =>
   Traversable (Coproduct f g) where
 -- Implement the traverse function for a Traversable instance for Coproduct
-  traverse f (InL fa) = InL <$> traverse f fa 
-  traverse f (InR fa) = InR <$> traverse f fa 
+  traverse f (InL fa) = InL <$> traverse f fa
+  traverse f (InR fa) = InR <$> traverse f fa
 
